@@ -2,9 +2,11 @@ const speedyMap = (config) => {
 
     const map = new mapboxgl.Map({
         container: "map",
+        projection: "globe",
         style: "mapbox://styles/mapbox/light-v11",
         center: [10, 40],
-        zoom: 2
+        zoom: 2,
+        attributionControl: false
     });
     
     map.on("load", () => {
@@ -24,10 +26,25 @@ const speedyMap = (config) => {
                 "type": "fill",
                 "source": "envelope",
                 "paint": {
-                    "fill-color": "rgb(146, 181, 85)",
+                    "fill-color": "rgb(85, 135, 173)",
                     "fill-opacity": 0.5
                 }
             });
+
+            const legend = document.getElementById("legend");
+            const sublegend = legend.appendChild(document.createElement("div"));
+            sublegend.classList.add("sublegend");
+            sublegend.appendChild(document.createElement("p")).textContent = "Envelopes";
+            const item = document.createElement("div");
+            const key = document.createElement("span");
+            key.className = "legend-key";
+            key.style.backgroundColor = "rgb(85, 135, 173)";
+            const value = document.createElement("span");
+            value.innerHTML = "thermal";
+            item.appendChild(key);
+            item.appendChild(value);
+            sublegend.appendChild(item);
+
         }
     
         if (config.sources.density) {
@@ -55,6 +72,14 @@ const speedyMap = (config) => {
         }
         
         if (config.sources.summary) {
+
+            const summaryColors = {
+                "native": "rgb(171, 196, 147)",
+                "introduced": "rgb(237, 167, 69)",
+                "invasive": "rgb(245, 66, 93)",
+                "uncertain": "rgb(202, 117, 255)"
+            }
+
             map.addLayer({
                 "id": "summary",
                 "type": "fill",
@@ -63,15 +88,38 @@ const speedyMap = (config) => {
                     "fill-color": [
                         "match",
                         ["get", "establishmentMeans"],
-                        "native", "rgb(171, 196, 147)",
-                        "introduced", "rgb(245, 66, 93)",
-                        "uncertain", "rgb(202, 117, 255)",
-                        "none", "rgb(237, 167, 69)",
+                        "native", summaryColors.native,
+                        "introduced", [
+                            "match",
+                            ["get", "invasiveness"],
+                            "invasive", summaryColors.invasive,
+                            "concern", summaryColors.introduced,
+                            summaryColors.introduced
+                        ],
+                        "uncertain", summaryColors.uncertain,
+                        "none", summaryColors.uncertain,
                         "rgb(237, 167, 69)"
                     ],
                     "fill-opacity": 0.5
                 }
             });
+
+            const legend = document.getElementById("legend");
+            const sublegend = legend.appendChild(document.createElement("div"));
+            sublegend.classList.add("sublegend");
+            sublegend.appendChild(document.createElement("p")).textContent = "WoRMS";
+            for (const [means, color] of Object.entries(summaryColors)) {
+                const item = document.createElement("div");
+                const key = document.createElement("span");
+                key.className = "legend-key";
+                key.style.backgroundColor = color;
+                const value = document.createElement("span");
+                value.innerHTML = means;
+                item.appendChild(key);
+                item.appendChild(value);
+                sublegend.appendChild(item);
+            }
+
         }
 
         if (config.sources.distribution) {
@@ -87,6 +135,26 @@ const speedyMap = (config) => {
                 }
             });
         }
+
+        const link = document.createElement("a");
+        link.href = "#";
+        link.textContent = "globe";
+        link.className = "projection-toggle";
+
+        link.onclick = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (map.getProjection().name === "globe") {
+                map.setProjection("equalEarth");
+                link.textContent = "equalEarth";
+            } else {
+                map.setProjection("globe");
+                link.textContent = "globe";
+            }
+        };
+
+        const layers = document.getElementById("menu");
+        layers.appendChild(link);
 
     });
 
@@ -136,4 +204,6 @@ const speedyMap = (config) => {
         }
 
     });
+
+    return map;
 }

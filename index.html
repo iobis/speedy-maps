@@ -12,8 +12,9 @@
         </style>
     </head>
         <body>
-            <nav id="menu"></nav>
             <div id="map"></div>
+            <div class="map-overlay" id="menu"></div>
+            <div class="map-overlay" id="legend"></div>
 
             <script>
                 let aphiaid = 107451;
@@ -27,7 +28,12 @@
                         distribution: `distribution_${aphiaid}.geojson`
                     }
                 };
-                speedyMap(config);
+                const map = speedyMap(config);
+
+                const marker1 = new mapboxgl.Marker()
+                    .setLngLat([12.554729, 55.70651])
+                    .addTo(map);
+
             </script>
 
     </body>
